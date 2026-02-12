@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Score Manager Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--dark);
+            padding-bottom: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        /* HEADER */
+        .header {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .turn-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* CONTROLS */
+        .controls {
+            background: var(--white);
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--light);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .control-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #f9f5ff;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+        }
+
+        .rate-input {
+            width: 100% !important;
+            padding: 8px 10px;
+            font-size: 14px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: var(--white);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, var(--info), #0891b2);
+            color: var(--white);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: var(--white);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: var(--white);
+        }
+
+        .btn-small {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+
+        .btn:disabled, .btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .button-group-full {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        /* PLAYERS */
+        .player-list {
+            margin-bottom: 16px;
+        }
+
+        .player-card {
+            background: var(--white);
+            padding: 10px 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .player-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .player-card.played {
+            border-left-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .player-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .last-action-badge {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: var(--white);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .stat-box {
+            background: var(--light);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-money {
+            color: var(--success);
+        }
+
+        .rate-group {
+            margin-bottom: 12px;
+        }
+
+        .rate-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .player-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .player-buttons .btn {
+            padding: 10px 8px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            padding: 8px 6px;
+            font-size: 12px;
+        }
+
+        /* HOST PANEL */
+        .host-panel {
+            background: linear-gradient(135deg, var(--dark), #374151);
+            color: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .host-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .host-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .host-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .host-stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 6px;
+        }
+
+        .host-stat-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: var(--white);
+            width: 100%;
+            max-width: 500px;
+            padding: 24px;
+            border-radius: 16px;
+            position: relative;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #9ca3af;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--light);
+        }
+
+        th {
+            background: var(--light);
+            font-weight: 700;
+            color: var(--dark);
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        tr:hover {
+            background: #fafafa;
+        }
+
+        .table-host {
+            background: #f0fdf4;
+            font-weight: 700;
+        }
+
+        .table-money {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .table-host-money {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* CHART CANVAS */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 16px;
+        }
+
+        #scoreChart {
+            max-height: 300px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 480px) {
+            .container {
+                padding: 8px;
+            }
+
+            .header {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .turn-badge {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+
+            .player-buttons {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .host-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group-full {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 16px;
+            }
+
+            .modal-title {
+                font-size: 20px;
+            }
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>Đẳng Cấp Ngày Tết</h1>
+            <div class="turn-badge">Lượt <span id="turnNumber">1</span></div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="controls">
+            <div class="control-group">
+                <label>Hệ số chung (VNĐ/điểm)</label>
+                <input type="number" id="globalRate" value="5000" onchange="saveData()" min="0">
+            </div>
+
+            <div class="input-wrapper">
+                <input type="text" id="playerName" placeholder="Nhập tên người chơi..." maxlength="20">
+                <button class="btn btn-primary btn-small" onclick="addPlayer()" style="flex-shrink: 0;">Thêm</button>
+            </div>
+
+            <div class="button-group-full">
+                <button class="btn btn-info" onclick="showSummary()">📊 Tổng Kết</button>
+                <button class="btn btn-warning" onclick="showChart()">📈 Đồ Thị</button>
+                <button class="btn btn-danger" onclick="resetAll()">🔄 RESET</button>
+            </div>
+        </div>
+
+        <!-- PLAYERS LIST -->
+        <div class="player-list" id="playerList"></div>
+
+        <!-- HOST PANEL -->
+        <div class="host-panel">
+            <div class="host-title">👑 Chủ (Cái)</div>
+            <div class="host-stats">
+                <div class="host-stat">
+                    <div class="host-stat-label">Tổng Điểm</div>
+                    <div class="host-stat-value" id="hostScore">0</div>
+                </div>
+                <div class="host-stat">
+                    <div class="host-stat-label">Tiền</div>
+                    <div class="host-stat-value" id="hostMoney">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUMMARY -->
+    <div class="modal" id="summaryModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeSummary()">×</span>
+            <div class="modal-title">📋 Bảng Tổng Kết</div>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <!-- MODAL CHART -->
+    <div class="modal" id="chartModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeChart()">×</span>
+            <div class="modal-title">📊 Biểu Đồ Điểm</div>
+            <div class="chart-container">
+                <canvas id="scoreChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTurn = 1;
+        let chart = null;
+
+        /* ===== FORMAT ===== */
+        function formatMoney(num) {
+            return Number(num).toLocaleString('vi-VN');
+        }
+
+        /* ===== SAVE / LOAD ===== */
+        function saveData() {
+            const players = [];
+            document.querySelectorAll(".player-card").forEach(p => {
+                players.push({
+                    name: p.querySelector(".player-name").textContent,
+                    score: p.querySelector(".score").textContent,
+                    rate: p.querySelector(".rate").value,
+                    history: JSON.parse(p.dataset.history),
+                    played: p.dataset.played,
+                    lastChange: p.dataset.lastChange
+                });
+            });
+
+            localStorage.setItem("scoreAppData_v2", JSON.stringify({
+                turn: currentTurn,
+                globalRate: document.getElementById("globalRate").value,
+                players: players
+            }));
+        }
+
+        function loadData() {
+            const data = JSON.parse(localStorage.getItem("scoreAppData_v2"));
+            if (!data) return;
+
+            currentTurn = data.turn;
+            document.getElementById("turnNumber").textContent = currentTurn;
+            document.getElementById("globalRate").value = data.globalRate;
+
+            data.players.forEach(p => {
+                createPlayer(p);
+            });
+
+            updateHost();
+        }
+
+        function exportData() {
+            const data = JSON.parse(localStorage.getItem("scoreAppData_v2")) || { players: [] };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `score_manager_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        /* ===== PLAYER ===== */
+        function addPlayer() {
+            const name = document.getElementById("playerName").value.trim();
+            if (name === "") {
+                alert("Vui lòng nhập tên người chơi!");
+                return;
+            }
+
+            createPlayer({
+                name: name,
+                score: 0,
+                rate: "",
+                history: [],
+                played: "false",
+                lastChange: 0
+            });
+
+            document.getElementById("playerName").value = "";
+            document.getElementById("playerName").focus();
+            saveData();
+        }
+
+        function createPlayer(data) {
+            const historyLength = currentTurn - 1;
+            let history = data.history || [];
+
+            while (history.length < historyLength) {
+                history.push(0);
+            }
+
+            const div = document.createElement("div");
+            div.className = "player-card";
+            div.dataset.played = data.played || "false";
+            div.dataset.lastChange = data.lastChange || 0;
+            div.dataset.history = JSON.stringify(history);
+
+            div.innerHTML = `
+                <div class="player-header">
+                    <span class="player-name">${data.name}</span>
+                    <div class="last-action-badge"></div>
+                </div>
+
+                <div class="rate-group">
+                    <label>Hệ số riêng</label>
+                    <input type="number" class="rate rate-input" 
+                        placeholder="Mặc định theo hệ số chung"
+                        value="${data.rate || ""}" 
+                        onchange="updateMoney(this.closest('.player-card')); saveData();"
+                        min="0">
+                </div>
+
+                <div class="player-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Điểm</div>
+                        <div class="stat-value score">${data.score || 0}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Tiền (VNĐ)</div>
+                        <div class="stat-value stat-money money">0</div>
+                    </div>
+                </div>
+
+                <div class="player-buttons">
+                    <button class="btn btn-success btn-small" onclick="changeScore(this, 1)">+1</button>
+                    <button class="btn btn-success btn-small" onclick="changeScore(this, 2)">+2</button>
+                    <button class="btn btn-info btn-small" onclick="changeScore(this, 0)">+0</button>
+                    <button class="btn btn-warning btn-small" onclick="changeScore(this, -1)">-1</button>
+                    <button class="btn btn-warning btn-small" onclick="changeScore(this, -2)">-2</button>
+                    <button class="btn btn-secondary btn-small" onclick="changeScore(this, 3)">+3</button>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="rollback(this)">↶ Hoàn tác</button>
+                    <button class="btn btn-danger" onclick="deletePlayer(this)">🗑 Xóa</button>
+                </div>
+            `;
+
+            document.getElementById("playerList").appendChild(div);
+
+            if (div.dataset.played === "true") {
+                const badge = div.querySelector(".last-action-badge");
+                const val = parseInt(div.dataset.lastChange);
+                badge.textContent = (val >= 0 ? "+" : "") + val;
+                badge.style.display = "block";
+                disableButtons(div);
+                div.classList.add("played");
+            }
+
+            updateMoney(div);
+        }
+
+        /* ===== GAME LOGIC ===== */
+        function changeScore(btn, val) {
+            const p = btn.closest(".player-card");
+            if (p.dataset.played === "true") {
+                alert("Người chơi này đã đánh trong lượt này!");
+                return;
+            }
+
+            const scoreEl = p.querySelector(".score");
+            const badge = p.querySelector(".last-action-badge");
+
+            scoreEl.textContent = parseInt(scoreEl.textContent) + val;
+            p.dataset.played = "true";
+            p.dataset.lastChange = val;
+
+            badge.textContent = (val >= 0 ? "+" : "") + val;
+            badge.style.display = "block";
+
+            p.classList.add("played");
+            updateMoney(p);
+            disableButtons(p);
+            checkTurn();
+            updateHost();
+            saveData();
+        }
+
+        function rollback(btn) {
+            const p = btn.closest(".player-card");
+            if (p.dataset.played === "false") return;
+
+            const scoreEl = p.querySelector(".score");
+            const badge = p.querySelector(".last-action-badge");
+
+            scoreEl.textContent = parseInt(scoreEl.textContent) - parseInt(p.dataset.lastChange);
+            p.dataset.played = "false";
+            p.dataset.lastChange = 0;
+            badge.style.display = "none";
+
+            p.classList.remove("played");
+            enableButtons(p);
+            updateMoney(p);
+            updateHost();
+            saveData();
+        }
+
+        function checkTurn() {
+            const players = document.querySelectorAll(".player-card");
+            if (players.length === 0) return;
+
+            let allDone = true;
+            players.forEach(p => {
+                if (p.dataset.played === "false") allDone = false;
+            });
+
+            if (allDone) {
+                setTimeout(() => {
+                    currentTurn++;
+                    document.getElementById("turnNumber").textContent = currentTurn;
+
+                    players.forEach(p => {
+                        let history = JSON.parse(p.dataset.history);
+                        history.push(parseInt(p.querySelector(".score").textContent));
+                        p.dataset.history = JSON.stringify(history);
+
+                        p.dataset.played = "false";
+                        p.querySelector(".last-action-badge").style.display = "none";
+                        p.classList.remove("played");
+                        enableButtons(p);
+                    });
+
+                    saveData();
+                }, 500);
+            }
+        }
+
+        function updateMoney(p) {
+            const score = parseInt(p.querySelector(".score").textContent);
+            const globalRate = parseInt(document.getElementById("globalRate").value) || 0;
+            const rate = parseInt(p.querySelector(".rate").value) || globalRate;
+            p.querySelector(".money").textContent = formatMoney(score * rate);
+        }
+
+        function updateHost() {
+            let totalScore = 0;
+            let totalMoney = 0;
+
+            document.querySelectorAll(".player-card").forEach(p => {
+                totalScore += parseInt(p.querySelector(".score").textContent);
+                const moneyText = p.querySelector(".money").textContent.replace(/\./g, '');
+                totalMoney += parseInt(moneyText) || 0;
+            });
+
+            document.getElementById("hostScore").textContent = -totalScore;
+            document.getElementById("hostMoney").textContent = formatMoney(-totalMoney);
+        }
+
+        /* ===== MODALS ===== */
+        function showSummary() {
+            const players = document.querySelectorAll(".player-card");
+            if (players.length === 0) {
+                alert("Chưa có người chơi nào!");
+                return;
+            }
+
+            let html = "<table><thead><tr><th>Tên</th><th>Điểm</th><th>Tiền (VNĐ)</th></tr></thead><tbody>";
+
+            players.forEach(p => {
+                html += `<tr>
+                    <td>${p.querySelector(".player-name").textContent}</td>
+                    <td>${p.querySelector(".score").textContent}</td>
+                    <td class="table-money">${p.querySelector(".money").textContent}</td>
+                </tr>`;
+            });
+
+            html += `<tr class="table-host">
+                <td>👑 CHỦ (CÁI)</td>
+                <td>${document.getElementById("hostScore").textContent}</td>
+                <td class="table-host-money">${document.getElementById("hostMoney").textContent}</td>
+            </tr></tbody></table>`;
+
+            document.getElementById("summaryContent").innerHTML = html;
+            document.getElementById("summaryModal").style.display = "flex";
+        }
+
+        function closeSummary() {
+            document.getElementById("summaryModal").style.display = "none";
+        }
+
+        function showChart() {
+            const totalTurns = currentTurn - 1;
+            if (totalTurns <= 0) {
+                alert("Cần ít nhất 1 lượt hoàn thành để vẽ đồ thị!");
+                return;
+            }
+
+            // ===== 1. Tạo labels từ 0 =====
+            const labels = [];
+            for (let i = 0; i <= totalTurns; i++) {
+                labels.push("Lượt " + i);
+            }
+
+            const datasets = [];
+            let hostHistory = new Array(totalTurns + 1).fill(0);
+
+            const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6'];
+
+            document.querySelectorAll(".player-card").forEach((p, idx) => {
+                let history = JSON.parse(p.dataset.history);
+
+                // ===== 2. Thêm 0 vào đầu để bắt đầu từ lượt 0 =====
+                history = [0, ...history];
+
+                datasets.push({
+                    label: p.querySelector(".player-name").textContent,
+                    data: history,
+                    borderColor: colors[idx % colors.length],
+                    backgroundColor: colors[idx % colors.length] + '20',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: colors[idx % colors.length]
+                });
+
+                // ===== 3. Tính hostHistory đúng theo length mới =====
+                for (let i = 0; i <= totalTurns; i++) {
+                    hostHistory[i] -= (history[i] || 0);
+                }
+            });
+
+            datasets.push({
+                label: "👑 CHỦ",
+                data: hostHistory,
+                borderColor: "#1f2937",
+                backgroundColor: "#1f293720",
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: "#1f2937"
+            });
+
+            document.getElementById("chartModal").style.display = "flex";
+            const ctx = document.getElementById("scoreChart").getContext("2d");
+
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#e5e7eb' }
+                        },
+                        x: {
+                            grid: { color: '#e5e7eb' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function closeChart() {
+            document.getElementById("chartModal").style.display = "none";
+        }
+
+        /* ===== UTILS ===== */
+        function disableButtons(p) {
+            p.querySelectorAll(".player-buttons .btn").forEach(b => b.classList.add("disabled"));
+        }
+
+        function enableButtons(p) {
+            p.querySelectorAll(".player-buttons .btn").forEach(b => b.classList.remove("disabled"));
+        }
+
+        function deletePlayer(btn) {
+            const name = btn.closest(".player-card").querySelector(".player-name").textContent;
+            if (confirm(`Xóa "${name}" và dữ liệu liên quan?`)) {
+                btn.closest(".player-card").remove();
+                updateHost();
+                saveData();
+            }
+        }
+
+        function resetAll() {
+            if (confirm("⚠️ CẢNH BÁO: Xóa toàn bộ dữ liệu? Hành động này KHÔNG thể hoàn tác!")) {
+                if (confirm("Bạn có chắc chắn không?")) {
+                    localStorage.removeItem("scoreAppData_v2");
+                    location.reload();
+                }
+            }
+        }
+
+        // INIT
+        window.onload = loadData;
+
+        // Allow Enter key to add player
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("playerName").addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addPlayer();
+            });
+        });
+    </script>
+</body>
+</html>
