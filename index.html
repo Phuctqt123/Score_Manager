@@ -538,6 +538,62 @@
             font-size: 16px;
             margin-bottom: 20px;
         }
+        
+        /* ===== HISTORY LAYOUT FIX ===== */
+
+        .history-layout {
+            width: 95vw;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        #historyContent {
+            flex: 1;
+            display: flex;
+        }
+
+        #historyContent table {
+            width: 100%;
+            height: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        #historyContent th,
+        #historyContent td {
+            border: 1px solid #e5e7eb;
+            text-align: center;
+            padding: 4px;
+        }
+        #historyModal .modal-content {
+            width: 95vw;
+
+            /* dùng dvh thay vì vh cho iOS */
+            height: 90dvh;
+
+            display: flex;
+            flex-direction: column;
+
+            padding:
+                calc(16px + env(safe-area-inset-top))
+                16px
+                calc(16px + env(safe-area-inset-bottom))
+                16px;
+
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+
     </style>
 </head>
 
@@ -566,6 +622,7 @@
 
             <div class="button-group-full">
                 <button class="btn btn-info" onclick="showSummary()">📊 Tổng Kết</button>
+                <button class="btn btn-primary" onclick="showHistory()">📜 Lịch Sử</button>
                 <button class="btn btn-warning" onclick="showChart()">📈 Đồ Thị</button>
                 <button class="btn btn-danger" onclick="resetAll()">🔄 RESET</button>
             </div>
@@ -610,6 +667,24 @@
         </div>
     </div>
 
+    <!-- MODAL HISTORY -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content history-layout">
+
+            <div class="history-header">
+                <div class="modal-title">📜 Lịch Sử Các Lượt</div>
+                <button class="btn btn-danger btn-small" onclick="closeHistory()">Đóng</button>
+            </div>
+
+            <div id="historyContent"></div>
+
+        </div>
+    </div>
+
+
+    
+
+
     <script>
         let currentTurn = 1;
         let chart = null;
@@ -653,6 +728,8 @@
             });
 
             updateHost();
+            updateNicknames();
+
         }
 
         function exportData() {
@@ -705,9 +782,21 @@
 
             div.innerHTML = `
                 <div class="player-header">
-                    <span class="player-name">${data.name}</span>
+                    <div>
+                        <span class="player-name">${data.name}</span>
+                        <span class="nickname-badge" style="
+                            margin-left:8px;
+                            font-size:12px;
+                            font-weight:700;
+                            padding:4px 8px;
+                            border-radius:12px;
+                            background:#e5e7eb;
+                            color:#374151;
+                        "></span>
+                    </div>
                     <div class="last-action-badge"></div>
                 </div>
+
 
                 <div class="rate-group">
                     <label>Hệ số riêng</label>
@@ -757,6 +846,60 @@
 
             updateMoney(div);
         }
+        function updateNicknames() {
+            const players = Array.from(document.querySelectorAll(".player-card"));
+
+            if (players.length === 0) return;
+
+            // Lấy score
+            const data = players.map(p => ({
+                el: p,
+                score: parseInt(p.querySelector(".score").textContent)
+            }));
+
+            // Sort giảm dần theo điểm
+            const sortedDesc = [...data].sort((a, b) => b.score - a.score);
+            const sortedAsc = [...data].sort((a, b) => a.score - b.score);
+
+            const highest = sortedDesc[0]?.score;
+            const second = sortedDesc[1]?.score;
+            const lowest = sortedAsc[0]?.score;
+
+            players.forEach(p => {
+                const score = parseInt(p.querySelector(".score").textContent);
+                const badge = p.querySelector(".nickname-badge");
+
+                badge.textContent = "";
+                badge.style.background = "#e5e7eb";
+                badge.style.color = "#374151";
+
+                if (score === highest && score > 3) {
+                    badge.textContent = "😎 Thần Bài";
+                    badge.style.background = "#facc15";
+                    badge.style.color = "#000";
+                }
+                else if ( score > 0) {
+                    badge.textContent = "🎯 Cũng Cũng";
+                    badge.style.background = "#60a5fa";
+                    badge.style.color = "#fff";
+                }
+                else if (score === lowest && score < -10 && score >-20) {
+                    badge.textContent = "💀 Nên Nghỉ Chơi";
+                    badge.style.background = "#ef4444";
+                    badge.style.color = "#fff";
+                }
+                else if (score === lowest && score <= -20 ) {
+                    badge.textContent = "💀💀💀 Hết cứu";
+                    badge.style.background = "#ef4444";
+                    badge.style.color = "#fff";
+                }
+                else if (score < 0) {
+                    badge.textContent = "🐔 Hơi Gà";
+                    badge.style.background = "#9ca3af";
+                    badge.style.color = "#fff";
+                }
+            });
+        }
 
         /* ===== GAME LOGIC ===== */
         function changeScore(btn, val) {
@@ -781,6 +924,7 @@
             disableButtons(p);
             checkTurn();
             updateHost();
+            updateNicknames();
             saveData();
         }
 
@@ -800,6 +944,7 @@
             enableButtons(p);
             updateMoney(p);
             updateHost();
+            updateNicknames();
             saveData();
         }
 
@@ -852,6 +997,63 @@
 
             document.getElementById("hostScore").textContent = -totalScore;
             document.getElementById("hostMoney").textContent = formatMoney(-totalMoney);
+        }
+        function showHistory() {
+            const players = Array.from(document.querySelectorAll(".player-card"));
+            if (players.length === 0) return alert("Chưa có người chơi!");
+
+            const totalTurns = currentTurn - 1;
+            if (totalTurns <= 0) return alert("Chưa có lượt nào hoàn thành!");
+
+            const totalRows = totalTurns + 1; // + header
+            const totalCols = players.length + 1; // + cột Lượt
+
+            // Tính font size tự động
+            let fontSize = Math.min(
+                18 - totalTurns * 0.6,
+                18 - players.length * 0.8
+            );
+
+            if (fontSize < 8) fontSize = 8;
+
+            let html = `<table style="font-size:${fontSize}px">`;
+            html += "<thead><tr><th>Lượt</th>";
+
+            players.forEach(p => {
+                html += `<th>${p.querySelector(".player-name").textContent}</th>`;
+            });
+
+            html += "</tr></thead><tbody>";
+
+            for (let turn = 0; turn < totalTurns; turn++) {
+                html += `<tr><td>${turn + 1}</td>`;
+
+                players.forEach(p => {
+                    const history = JSON.parse(p.dataset.history);
+                    const prev = turn === 0 ? 0 : history[turn - 1];
+                    const current = history[turn];
+                    const diff = current - prev;
+
+                    let display = diff > 0 ? "+" + diff : diff;
+                    let color = diff > 0 ? "#10b981" :
+                                diff < 0 ? "#ef4444" :
+                                "#6b7280";
+
+                    html += `<td style="color:${color}">${display}</td>`;
+                });
+
+                html += "</tr>";
+            }
+
+            html += "</tbody></table>";
+
+            document.getElementById("historyContent").innerHTML = html;
+            document.getElementById("historyModal").style.display = "flex";
+        }
+
+
+        function closeHistory() {
+            document.getElementById("historyModal").style.display = "none";
         }
 
         /* ===== MODALS ===== */
